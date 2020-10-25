@@ -8,17 +8,7 @@ namespace Mekitamete
 {
     public class Settings
     {
-        private static Settings internalSettings;
-        public static Settings Instance { 
-            get {
-                if (internalSettings == null)
-                {
-                    internalSettings = LoadSettings();
-                }
-
-                return internalSettings;
-            }
-        }
+        public static Settings Instance { get; } = LoadSettings();
 
         public const string SettingsFileName = "mekitamete.conf";
         private static Settings LoadSettings()
