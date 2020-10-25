@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using Mekitamete.Database;
 
 namespace Mekitamete
 {
     public class MainApplication : IDisposable
     {
         private bool disposed;
+        private DBConnection DBConnection { get; }
 
         public MainApplication()
         {
-
+            DBConnection = new DBConnection();
         }
 
         protected virtual void Dispose(bool disposing)
@@ -19,7 +19,7 @@ namespace Mekitamete
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects)
+                    DBConnection.Dispose();
                 }
 
                 disposed = true;

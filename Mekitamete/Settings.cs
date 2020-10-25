@@ -10,7 +10,7 @@ namespace Mekitamete
     {
         public static Settings Instance { get; } = LoadSettings();
 
-        public const string SettingsFileName = "mekitamete.conf";
+        private const string SettingsFileName = "mekitamete.conf";
         private static Settings LoadSettings()
         {
             Settings s;
