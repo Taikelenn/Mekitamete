@@ -7,6 +7,9 @@ namespace Mekitamete
     {
         static void Main(string[] args)
         {
+            Logger.OpenLogFile("mekitamete.log");
+            Logger.Log("Initializing application...");
+
             using (var mainApp = new MainApplication())
             {
 
