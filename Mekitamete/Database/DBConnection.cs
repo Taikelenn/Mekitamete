@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Mekitamete.Database
 {
-    public class DBConnection : IDisposable
+    public partial class DBConnection : IDisposable
     {
         private const string DBFileName = "mekitamete.db";
         private SQLiteConnection dbConnection;
