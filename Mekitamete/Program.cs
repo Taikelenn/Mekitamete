@@ -12,9 +12,9 @@ namespace Mekitamete
 
             try
             {
-                using (var mainApp = new MainApplication())
+                using (var mainApp = MainApplication.Create())
                 {
-
+                    mainApp.Loop();
                 }
             }
             catch (Exception ex)
