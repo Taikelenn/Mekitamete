@@ -44,10 +44,9 @@ namespace Mekitamete
             WebInterface.Stop();
         }
 
-        internal static byte[] HandleHTTPRequest(HttpListenerContext ctx)
+        internal static void HandleHTTPRequest(HttpRequestArgs args)
         {
-            ctx.Response.StatusCode = 404;
-            return new byte[] { };
+            
         }
 
         protected virtual void Dispose(bool disposing)

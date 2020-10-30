@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mekitamete.Http.Responses;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -21,31 +22,46 @@ namespace Mekitamete.Http
             listener = new HttpListener();
             listener.IgnoreWriteExceptions = true;
             listener.Prefixes.Add($"http://*:{listenPort}/");
-            
         }
 
         private void HandleRequest(HttpListenerContext ctx)
         {
+            HttpRequestArgs args = new HttpRequestArgs(ctx);
+            ctx.Response.ContentType = "application/json";
+
+            // if the HTTP server is closing, ignore all incoming requests
             if (isTerminating)
             {
-                ctx.Response.Close();
+                args.SetResponse(503, new HttpErrorResponse("The server is shutting down"));
+            }
+            else if (args.Url == null)
+            {
+                args.SetResponse(403, new HttpErrorResponse("Invalid API key"));
+            }
+            else
+            {
+                try
+                {
+                    MainApplication.HandleHTTPRequest(args);
+                }
+                catch (Exception ex)
+                {
+                    args.SetResponse(500, new HttpErrorResponse($"An exception has occurred during request processing:\n{ex}"));
+                }
             }
 
-            Logger.Log($"HTTP request: {ctx.Request.RawUrl}");
+            if (args.Response != null)
+            {
+                byte[] resp = args.Response.ToJsonResponse();
+                ctx.Response.ContentLength64 = resp.LongLength;
+                ctx.Response.OutputStream.Write(resp);
+            }
+            else
+            {
+                Logger.Log($"Request {args.Url} did not produce any response", Logger.MessageLevel.Warning);
+            }
 
-            byte[] response;
-            try
-            {
-                response = MainApplication.HandleHTTPRequest(ctx);
-            }
-            catch (Exception ex)
-            {
-
-            }
-            finally
-            {
-                ctx.Response.Close();
-            }
+            ctx.Response.Close();
         }
 
         public void Stop()
