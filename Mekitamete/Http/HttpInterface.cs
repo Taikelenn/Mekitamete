@@ -50,16 +50,15 @@ namespace Mekitamete.Http
                 }
             }
 
-            if (args.Response != null)
-            {
-                byte[] resp = args.Response.ToJsonResponse();
-                ctx.Response.ContentLength64 = resp.LongLength;
-                ctx.Response.OutputStream.Write(resp);
-            }
-            else
+            if (args.Response == null)
             {
                 Logger.Log($"Request {args.Url} did not produce any response", Logger.MessageLevel.Warning);
+                args.Response = new HttpErrorResponse("Empty response");
             }
+
+            byte[] resp = args.Response.ToJsonResponse();
+            ctx.Response.ContentLength64 = resp.LongLength;
+            ctx.Response.OutputStream.Write(resp);
 
             ctx.Response.Close();
         }

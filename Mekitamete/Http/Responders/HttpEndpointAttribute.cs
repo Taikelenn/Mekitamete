@@ -11,12 +11,7 @@ namespace Mekitamete.Http.Responders
 
         public HttpEndpointAttribute(string endpoint)
         {
-            if (!endpoint.StartsWith('/'))
-            {
-                endpoint = '/' + endpoint;
-            }
-
-            Endpoint = endpoint;
+            Endpoint = '/' + endpoint.Trim('/');
         }
     }
 }
