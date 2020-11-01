@@ -1,7 +1,11 @@
-﻿using Mekitamete.Http.Responses;
+﻿using Mekitamete.Http.Endpoints;
+using Mekitamete.Http.Responders;
+using Mekitamete.Http.Responses;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,6 +28,42 @@ namespace Mekitamete.Http
             listener.Prefixes.Add($"http://*:{listenPort}/");
         }
 
+        private void HandleRequestInternal(HttpRequestArgs args)
+        {
+            // TODO: verify the performance of this pile of reflection
+
+            // any of the endpoints will do here; it's done this way in order to avoid hardcoding the namespace
+            string endpointsNamespace = typeof(MainEndpoint).Namespace;
+
+            // get all endpoint classes
+            var allEndpoints = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.Namespace == endpointsNamespace);
+
+            // get all endpoints that contain the HttpEndpointAttribute
+            var attributedEndpoints = allEndpoints.Select(x => new Tuple<Type, Attribute>(x, x.GetCustomAttribute(typeof(HttpEndpointAttribute)))).Where(x => x.Item2 != null);
+
+            // get the endpoint that should serve the request
+            var endpointTuple = attributedEndpoints.FirstOrDefault(x => ((HttpEndpointAttribute)x.Item2).ShouldServeRequest(args.Url));
+            if (endpointTuple == null)
+            {
+                args.SetResponse(404, null);
+                return;
+            }
+
+            var endpoint = endpointTuple.Item1;
+
+            // locate the correct method for requested HTTP method
+            var attributedMethods = endpoint.GetMethods(BindingFlags.Public | BindingFlags.Static).Select(x => new Tuple<MethodInfo, Attribute>(x, x.GetCustomAttribute(typeof(HttpMethodAttribute)))).Where(x => x.Item2 != null);
+            var methodTuple = attributedMethods.FirstOrDefault(x => ((HttpMethodAttribute)x.Item2).Method == args.Context.Request.HttpMethod);
+            if (methodTuple == null)
+            {
+                args.SetResponse(405, null);
+                return;
+            }
+
+            // call the handler
+            methodTuple.Item1.Invoke(null, new object[] { args });
+        }
+
         private void HandleRequest(HttpListenerContext ctx)
         {
             HttpRequestArgs args = new HttpRequestArgs(ctx);
@@ -42,7 +82,7 @@ namespace Mekitamete.Http
             {
                 try
                 {
-                    MainApplication.HandleHTTPRequest(args);
+                    HandleRequestInternal(args);
                 }
                 catch (Exception ex)
                 {

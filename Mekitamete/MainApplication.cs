@@ -39,14 +39,9 @@ namespace Mekitamete
         {
             WebInterface.Listen();
 
-            Thread.Sleep(7000);
+            Thread.Sleep(Timeout.Infinite);
 
             WebInterface.Stop();
-        }
-
-        internal static void HandleHTTPRequest(HttpRequestArgs args)
-        {
-            
         }
 
         protected virtual void Dispose(bool disposing)
