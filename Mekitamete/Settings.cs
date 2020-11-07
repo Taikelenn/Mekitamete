@@ -11,14 +11,14 @@ namespace Mekitamete
         public string EndpointAddress { get; }
         public string RPCUsername { get; }
         public string RPCPassword { get; }
-        public string WalletAddress { get; }
+        public string WalletPassword { get; }
 
         public RPCEndpointSettings()
         {
             EndpointAddress = "http://127.0.0.1:10000";
             RPCUsername = "rpcuser";
             RPCPassword = "rpcpass";
-            WalletAddress = null;
+            WalletPassword = null;
         }
     }
 
