@@ -45,6 +45,7 @@ namespace Mekitamete.Http
             var endpointTuple = attributedEndpoints.FirstOrDefault(x => ((HttpEndpointAttribute)x.Item2).ShouldServeRequest(args.Url));
             if (endpointTuple == null)
             {
+                // TODO: send some response
                 args.SetResponse(404, null);
                 return;
             }
@@ -56,6 +57,7 @@ namespace Mekitamete.Http
             var methodTuple = attributedMethods.FirstOrDefault(x => ((HttpMethodAttribute)x.Item2).Method == args.Context.Request.HttpMethod);
             if (methodTuple == null)
             {
+                // TODO: send some response
                 args.SetResponse(405, null);
                 return;
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading;
+using Mekitamete.Daemons;
 using Mekitamete.Database;
 using Mekitamete.Http;
 
@@ -28,6 +29,7 @@ namespace Mekitamete
         {
             DBConnection = new DBConnection();
             WebInterface = new HttpInterface(Settings.Instance.ServerPort);
+            var x = new MoneroDaemon(Settings.Instance.MoneroDaemon);
         }
 
         public void RequestTermination()
