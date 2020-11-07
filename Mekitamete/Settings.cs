@@ -3,23 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Mekitamete
 {
+    // public setters are required for System.Text.JSON to work correctly; the setters should preferably be private, but this must wait until...
+    // ...we switch to Newtonsoft.JSON or .NET 5.0 gets released with the JsonInclude attribute
+
     public class RPCEndpointSettings
     {
-        public string EndpointAddress { get; }
-        public string RPCUsername { get; }
-        public string RPCPassword { get; }
-        public string WalletPassword { get; }
-
-        public RPCEndpointSettings()
-        {
-            EndpointAddress = "http://127.0.0.1:10000";
-            RPCUsername = "rpcuser";
-            RPCPassword = "rpcpass";
-            WalletPassword = null;
-        }
+        public string EndpointAddress { get; set; } = "http://127.0.0.1:10000";
+        public string RPCUsername { get; set; } = "rpcuser";
+        public string RPCPassword { get; set; } = "rpcpass";
+        public string WalletPassword { get; set; } = null;
     }
 
     public class Settings
@@ -30,21 +26,13 @@ namespace Mekitamete
         private static Settings LoadSettings()
         {
             Settings s;
-
-            if (File.Exists(SettingsFileName))
-            {
-                s = JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsFileName, Encoding.UTF8));
-            }
-            else
-            {
-                s = new Settings();
-            }
-
             var serializationOptions = new JsonSerializerOptions
             {
-                WriteIndented = true
+                WriteIndented = true,
+                PropertyNameCaseInsensitive = true
             };
 
+            s = File.Exists(SettingsFileName) ? JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsFileName, Encoding.UTF8), serializationOptions) : new Settings();
             File.WriteAllText(SettingsFileName, JsonSerializer.Serialize(s, serializationOptions), Encoding.UTF8);
 
             if (!s.ValidateSettings(out string errorMsg))
@@ -71,17 +59,9 @@ namespace Mekitamete
             return errorMsg == "";
         }
 
-        private Settings()
-        {
-            ServerPort = 48881;
-            APIKey = "0ce3d42759116e3cdedebeb5c1d53c81f4a814dadcf9d11b";
-            BitcoinDaemon = new RPCEndpointSettings();
-            MoneroDaemon = new RPCEndpointSettings();
-        }
-
-        public ushort ServerPort { get; }
-        public string APIKey { get; }
-        public RPCEndpointSettings BitcoinDaemon { get; }
-        public RPCEndpointSettings MoneroDaemon { get; }
+        public ushort ServerPort { get; set; } = 48881;
+        public string APIKey { get; set; } = "0ce3d42759116e3cdedebeb5c1d53c81f4a814dadcf9d11b";
+        public RPCEndpointSettings BitcoinDaemon { get; set; } = new RPCEndpointSettings();
+        public RPCEndpointSettings MoneroDaemon { get; set; } = new RPCEndpointSettings();
     }
 }
