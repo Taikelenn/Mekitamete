@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mekitamete.Daemons.Requests;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -12,7 +13,12 @@ namespace Mekitamete.Daemons
         private RPCEndpointSettings EndpointSettings { get; }
         private CredentialCache EndpointCredentials { get; }
 
-        private string MakeRequest(string method, object parameters)
+        private JsonDocument MakeRequest(string method)
+        {
+            return MakeRequest(method, null);
+        }
+
+        private JsonDocument MakeRequest(string method, object parameters)
         {
             string url = EndpointSettings.EndpointAddress.TrimEnd('/') + "/json_rpc";
 
@@ -20,6 +26,7 @@ namespace Mekitamete.Daemons
             webRequest.Method = "POST";
             webRequest.ContentType = "application/json";
             webRequest.Credentials = EndpointCredentials;
+            webRequest.Timeout = 15000;
 
             using (var jsonWriter = new Utf8JsonWriter(webRequest.GetRequestStream()))
             {
@@ -30,7 +37,8 @@ namespace Mekitamete.Daemons
                 jsonWriter.WriteString("method", method);
                 if (parameters != null)
                 {
-                    jsonWriter.WriteString("params", JsonSerializer.Serialize(parameters));
+                    jsonWriter.WritePropertyName("params");
+                    JsonSerializer.Serialize(jsonWriter, parameters);
                 }
 
                 jsonWriter.WriteEndObject();
@@ -40,9 +48,30 @@ namespace Mekitamete.Daemons
             {
                 using (StreamReader sr = new StreamReader(webResponse.GetResponseStream()))
                 {
-                    return sr.ReadToEnd();
+                    return JsonDocument.Parse(sr.ReadToEnd());
                 }
             }
+        }
+
+        private const string MerchantWalletName = "mekitamete_wallet";
+        private void OpenMerchantWallet()
+        {
+            MakeRequest("close_wallet"); // close the wallet that is currently open
+
+            var res = MakeRequest("open_wallet", new MoneroOpenWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword)); // try to open the wallet
+
+            if (res.RootElement.TryGetProperty("error", out _)) // if an error occurs, attempt to create a new wallet (Monero won't ever overwrite existing wallets anyway)
+            {
+                Logger.Log("Monero: merchant wallet not found, attempting to create one", Logger.MessageLevel.Warning);
+                res = MakeRequest("create_wallet", new MoneroCreateWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword));
+                if (res.RootElement.TryGetProperty("error", out var errorElement))
+                {
+                    Logger.Log($"Monero: cannot create a new wallet:\n{errorElement}", Logger.MessageLevel.Error);
+                    throw new InvalidOperationException("Failed to create a new Monero wallet");
+                }
+            }
+
+            Logger.Log($"Monero: opened wallet {MerchantWalletName}");
         }
 
         public MoneroDaemon(RPCEndpointSettings settings)
@@ -51,7 +80,7 @@ namespace Mekitamete.Daemons
             EndpointCredentials = new CredentialCache();
             EndpointCredentials.Add(new Uri(settings.EndpointAddress), "Digest", new NetworkCredential(settings.RPCUsername, settings.RPCPassword));
 
-            Logger.Log(MakeRequest("get_height", null));
+            OpenMerchantWallet();
         }
     }
 }
