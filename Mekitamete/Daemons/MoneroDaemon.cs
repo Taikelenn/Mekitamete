@@ -53,6 +53,28 @@ namespace Mekitamete.Daemons
             }
         }
 
+        private T MakeRequest<T>(string method, object parameters)
+        {
+            var resp = MakeRequest(method, parameters);
+            if (resp.RootElement.TryGetProperty("result", out var jsonResult))
+            {
+                return JsonSerializer.Deserialize<T>(jsonResult.GetRawText());
+            }
+
+            string detailedErrorInfo = "<no error information>";
+            if (resp.RootElement.TryGetProperty("error", out var errorResult))
+            {
+                detailedErrorInfo = errorResult.GetRawText();
+            }
+
+            throw new CryptoDaemonException($"Operation {method} failed: {detailedErrorInfo}");
+        }
+
+        private void SaveWalletFile()
+        {
+            MakeRequest("store");
+        }
+
         private const string MerchantWalletName = "mekitamete_wallet";
         private void OpenMerchantWallet()
         {
@@ -63,15 +85,26 @@ namespace Mekitamete.Daemons
             if (res.RootElement.TryGetProperty("error", out _)) // if an error occurs, attempt to create a new wallet (Monero won't ever overwrite existing wallets anyway)
             {
                 Logger.Log("Monero: merchant wallet not found, attempting to create one", Logger.MessageLevel.Warning);
+
                 res = MakeRequest("create_wallet", new MoneroCreateWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword));
                 if (res.RootElement.TryGetProperty("error", out var errorElement))
                 {
                     Logger.Log($"Monero: cannot create a new wallet:\n{errorElement}", Logger.MessageLevel.Error);
-                    throw new InvalidOperationException("Failed to create a new Monero wallet");
+                    throw new CryptoDaemonException($"Failed to create a new Monero wallet: {errorElement}");
                 }
             }
 
             Logger.Log($"Monero: opened wallet {MerchantWalletName}");
+        }
+
+        public string CreateNewAddress(string label)
+        {
+            var res = MakeRequest<MoneroCreateAddressResponse>("create_address", new MoneroCreateAddressRequest(label));
+            Logger.Log($"Monero: created a new address {res.Address.Substring(0, Math.Min(res.Address.Length, 10))}... with index {res.AddressIndex}");
+
+            SaveWalletFile();
+
+            return res.Address;
         }
 
         public MoneroDaemon(RPCEndpointSettings settings)

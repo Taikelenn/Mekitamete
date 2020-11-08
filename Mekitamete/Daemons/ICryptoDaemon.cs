@@ -6,5 +6,6 @@ namespace Mekitamete.Daemons
 {
     interface ICryptoDaemon
     {
+        public string CreateNewAddress(string label);
     }
 }
