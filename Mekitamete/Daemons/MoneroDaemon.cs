@@ -13,11 +13,22 @@ namespace Mekitamete.Daemons
         private RPCEndpointSettings EndpointSettings { get; }
         private CredentialCache EndpointCredentials { get; }
 
+        /// <summary>
+        /// Executes a JSON RPC call to the wallet API without any parameters.
+        /// </summary>
+        /// <param name="method">The API method to call.</param>
+        /// <returns>Parsed JSON response.</returns>
         private JsonDocument MakeRequest(string method)
         {
             return MakeRequest(method, null);
         }
 
+        /// <summary>
+        /// Executes a JSON RPC call to the wallet API with parameters as an object. The parameters are JSON-serialized using the default serializer.
+        /// </summary>
+        /// <param name="method">The API method to call.</param>
+        /// <param name="parameters">Parameters of the API method. These are method-specific.</param>
+        /// <returns>Parsed JSON response.</returns>
         private JsonDocument MakeRequest(string method, object parameters)
         {
             string url = EndpointSettings.EndpointAddress.TrimEnd('/') + "/json_rpc";
@@ -53,6 +64,14 @@ namespace Mekitamete.Daemons
             }
         }
 
+        /// <summary>
+        /// Executes a JSON RPC call to the wallet API with parameters as an object and returnes a parsed response. Throws if an error occurs.
+        /// </summary>
+        /// <typeparam name="T">The type of the returned object.</typeparam>
+        /// <param name="method">The API method to call.</param>
+        /// <param name="parameters">Parameters of the API method. These are method-specific. Can be null if no parameters are necessary.</param>
+        /// <returns>An instance of the requested object, constructed by deserialization of the <b>result</b> property.</returns>
+        /// <exception cref="CryptoDaemonException"></exception>
         private T MakeRequest<T>(string method, object parameters)
         {
             var resp = MakeRequest(method, parameters);
@@ -70,6 +89,9 @@ namespace Mekitamete.Daemons
             throw new CryptoDaemonException($"Operation {method} failed: {detailedErrorInfo}");
         }
 
+        /// <summary>
+        /// Saves any unsaved changes into the Monero wallet file. Required after wallet-changing API calls, such as address creation.
+        /// </summary>
         private void SaveWalletFile()
         {
             MakeRequest("store");
@@ -107,6 +129,10 @@ namespace Mekitamete.Daemons
             return res.Address;
         }
 
+        /// <summary>
+        /// Creates an instance of a Monero wallet daemon and opens the default merchant wallet. If the merchant wallet does not exist, it is by default created.
+        /// </summary>
+        /// <param name="settings">Daemon endpoint settings.</param>
         public MoneroDaemon(RPCEndpointSettings settings)
         {
             EndpointSettings = settings;
