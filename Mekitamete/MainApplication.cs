@@ -22,13 +22,16 @@ namespace Mekitamete
         }
 
         private bool shouldExit;
-        private DBConnection DBConnection { get; }
+        internal DBConnection DBConnection { get; }
         private HttpInterface WebInterface { get; }
 
         private MainApplication()
         {
             DBConnection = new DBConnection();
             WebInterface = new HttpInterface(Settings.Instance.ServerPort);
+
+            DBConnection.InitializeDatabase();
+
             var x = new MoneroDaemon(Settings.Instance.MoneroDaemon);
         }
 
