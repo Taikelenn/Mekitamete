@@ -31,6 +31,14 @@ namespace Mekitamete.Transactions
         public string SuccessUrl { get; set; }
         public string FailureUrl { get; set; }
 
+        public List<string> Addresses
+        {
+            get
+            {
+                return MainApplication.Instance.DBConnection.GetAddressesForTransaction(this);
+            }
+        }
+
         private static readonly object IdLock = new object();
         private static readonly RNGCryptoServiceProvider cryptoRNG = new RNGCryptoServiceProvider();
         private static readonly HashSet<ulong> pendingIDs = new HashSet<ulong>();

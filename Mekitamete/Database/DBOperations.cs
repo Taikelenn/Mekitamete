@@ -12,14 +12,13 @@ namespace Mekitamete.Database
         {
             using (SQLiteCommand query = new SQLiteCommand("CREATE TABLE IF NOT EXISTS transactions (" +
                 "id INTEGER NOT NULL," +
-                "tag TEXT NOT NULL DEFAULT 'global'," + // "tag" is currently not implemented in the program
                 "currency INTEGER NOT NULL," +
                 "value INTEGER NOT NULL," +
                 "minConfirmations INTEGER NOT NULL DEFAULT 1," +
                 "note TEXT," +
                 "successUrl TEXT," +
                 "failureUrl TEXT," +
-                "PRIMARY KEY (id, tag)" +
+                "PRIMARY KEY (id)" +
                 ")", dbConnection))
             {
                 query.ExecuteNonQuery();
@@ -38,9 +37,10 @@ namespace Mekitamete.Database
 
         public bool IsIDUsed(ulong id)
         {
-            // we're not worried about SQL injection here because we're only allowing numeric values
-            using (SQLiteCommand query = new SQLiteCommand($"SELECT 1 FROM transactions WHERE id = {id}", dbConnection))
+            using (SQLiteCommand query = new SQLiteCommand("SELECT 1 FROM transactions WHERE id = @transId", dbConnection))
             {
+                query.Parameters.AddWithValue("@transId", id);
+
                 return query.ExecuteScalar() != null;
             }
         }
@@ -59,6 +59,26 @@ namespace Mekitamete.Database
                 insertQuery.Parameters.AddWithValue("@failureUrl", transaction.FailureUrl);
                 insertQuery.ExecuteNonQuery();
             }
+        }
+
+        public List<string> GetAddressesForTransaction(Transaction transaction)
+        {
+            List<string> addresses = new List<string>();
+
+            using (SQLiteCommand addrQuery = new SQLiteCommand("SELECT address FROM addresses WHERE transactionId = @transId", dbConnection))
+            {
+                addrQuery.Parameters.AddWithValue("@transId", transaction.Id);
+
+                using (SQLiteDataReader reader = addrQuery.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        addresses.Add(reader.GetString(0));
+                    }
+                }
+            }
+
+            return addresses;
         }
     }
 }
