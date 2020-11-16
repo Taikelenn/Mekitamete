@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Mekitamete.Daemons
 {
-    interface ICryptoDaemon
+    public interface ICryptoDaemon
     {
         /// <summary>
         /// Creates a new address for receiving cryptocurrency. The address may be assigned an optional label.

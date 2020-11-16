@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using Mekitamete.Daemons;
 using Mekitamete.Database;
 using Mekitamete.Http;
+using Mekitamete.Transactions;
 
 namespace Mekitamete
 {
@@ -24,15 +26,22 @@ namespace Mekitamete
         private bool shouldExit;
         internal DBConnection DBConnection { get; }
         private HttpInterface WebInterface { get; }
+        private Dictionary<TransactionCurrency, ICryptoDaemon> CryptoDaemons { get; }
 
         private MainApplication()
         {
             DBConnection = new DBConnection();
             WebInterface = new HttpInterface(Settings.Instance.ServerPort);
+            CryptoDaemons = new Dictionary<TransactionCurrency, ICryptoDaemon>();
 
             DBConnection.InitializeDatabase();
 
-            var x = new MoneroDaemon(Settings.Instance.MoneroDaemon);
+            CryptoDaemons.Add(TransactionCurrency.Monero, new MoneroDaemon(Settings.Instance.MoneroDaemon));
+        }
+
+        public ICryptoDaemon GetDaemonForCurrency(TransactionCurrency currency)
+        {
+            return CryptoDaemons.GetValueOrDefault(currency);
         }
 
         public void RequestTermination()
