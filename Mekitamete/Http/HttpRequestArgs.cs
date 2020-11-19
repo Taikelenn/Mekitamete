@@ -1,8 +1,10 @@
 ﻿using Mekitamete.Http.Responses;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 
 namespace Mekitamete.Http
 {
@@ -16,6 +18,17 @@ namespace Mekitamete.Http
         {
             Context.Response.StatusCode = statusCode;
             Response = response;
+        }
+
+        public T GetPostData<T>()
+        {
+            string input = "";
+            using (StreamReader sr = new StreamReader(Context.Request.InputStream))
+            {
+                input = sr.ReadToEnd();
+            }
+
+            return JsonSerializer.Deserialize<T>(input);
         }
 
         public HttpRequestArgs(HttpListenerContext ctx)
