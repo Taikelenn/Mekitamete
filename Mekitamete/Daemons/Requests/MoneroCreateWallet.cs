@@ -8,11 +8,11 @@ namespace Mekitamete.Daemons.Requests
     class MoneroCreateWalletRequest
     {
         [JsonProperty("filename")]
-        public string walletFilename { get; set; }
+        public string walletFilename { get; }
         [JsonProperty("password")]
-        public string walletPassword { get; set; }
+        public string walletPassword { get; }
         [JsonProperty("language")]
-        public string seedLanguage { get; set; }
+        public string seedLanguage { get; }
 
         public MoneroCreateWalletRequest(string filename, string password)
         {

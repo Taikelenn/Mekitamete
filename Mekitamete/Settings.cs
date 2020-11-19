@@ -8,10 +8,14 @@ namespace Mekitamete
 {
     public class RPCEndpointSettings
     {
-        public string EndpointAddress { get; set; } = "http://127.0.0.1:10000";
-        public string RPCUsername { get; set; } = "rpcuser";
-        public string RPCPassword { get; set; } = "rpcpass";
-        public string WalletPassword { get; set; } = null;
+        [JsonProperty]
+        public string EndpointAddress { get; private set; } = "http://127.0.0.1:10000";
+        [JsonProperty]
+        public string RPCUsername { get; private set; } = "rpcuser";
+        [JsonProperty]
+        public string RPCPassword { get; private set; } = "rpcpass";
+        [JsonProperty]
+        public string WalletPassword { get; private set; } = null;
     }
 
     public class Settings
@@ -50,9 +54,13 @@ namespace Mekitamete
             return errorMsg == "";
         }
 
-        public ushort ServerPort { get; set; } = 48881;
-        public string APIKey { get; set; } = "0ce3d42759116e3cdedebeb5c1d53c81f4a814dadcf9d11b";
-        public RPCEndpointSettings BitcoinDaemon { get; set; } = new RPCEndpointSettings();
-        public RPCEndpointSettings MoneroDaemon { get; set; } = new RPCEndpointSettings();
+        [JsonProperty]
+        public ushort ServerPort { get; private set; } = 48881;
+        [JsonProperty]
+        public string APIKey { get; private set; } = "0ce3d42759116e3cdedebeb5c1d53c81f4a814dadcf9d11b";
+        [JsonProperty]
+        public RPCEndpointSettings BitcoinDaemon { get; private set; } = new RPCEndpointSettings();
+        [JsonProperty]
+        public RPCEndpointSettings MoneroDaemon { get; private set; } = new RPCEndpointSettings();
     }
 }

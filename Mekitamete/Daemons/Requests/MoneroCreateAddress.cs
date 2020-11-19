@@ -8,9 +8,9 @@ namespace Mekitamete.Daemons.Requests
     class MoneroCreateAddressRequest
     {
         [JsonProperty("account_index")]
-        public uint AccountIndex { get; set; }
+        public uint AccountIndex { get; }
         [JsonProperty("label")]
-        public string Label { get; set; }
+        public string Label { get; }
 
         public MoneroCreateAddressRequest(string label)
         {
@@ -22,8 +22,8 @@ namespace Mekitamete.Daemons.Requests
     class MoneroCreateAddressResponse
     {
         [JsonProperty("address")]
-        public string Address { get; set; }
+        public string Address { get; private set; }
         [JsonProperty("address_index")]
-        public uint AddressIndex { get; set; }
+        public uint AddressIndex { get; private set; }
     }
 }

@@ -23,14 +23,14 @@ namespace Mekitamete.Transactions
 
     public class Transaction
     {
-        public ulong Id { get; set; }
-        public TransactionCurrency Currency { get; set; }
-        public TransactionStatus Status { get; set; }
-        public ulong PaymentAmount { get; set; }
-        public ulong MinConfirmations { get; set; }
-        public string Note { get; set; }
-        public string SuccessUrl { get; set; }
-        public string FailureUrl { get; set; }
+        public ulong Id { get; }
+        public TransactionCurrency Currency { get; }
+        public TransactionStatus Status { get; }
+        public ulong PaymentAmount { get; }
+        public ulong MinConfirmations { get; }
+        public string Note { get; }
+        public string SuccessUrl { get; }
+        public string FailureUrl { get; }
 
         public List<string> Addresses
         {
