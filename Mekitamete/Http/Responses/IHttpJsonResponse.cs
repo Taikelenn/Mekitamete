@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Mekitamete.Http.Responses
 {
@@ -10,7 +9,7 @@ namespace Mekitamete.Http.Responses
     {
         public byte[] ToJsonResponse()
         {
-            return JsonSerializer.SerializeToUtf8Bytes<object>(this);
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this));
         }
     }
 }

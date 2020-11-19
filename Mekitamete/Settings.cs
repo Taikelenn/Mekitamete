@@ -1,15 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Mekitamete
 {
-    // public setters are required for System.Text.JSON to work correctly; the setters should preferably be private, but this must wait until...
-    // ...we switch to Newtonsoft.JSON or .NET 5.0 gets released with the JsonInclude attribute
-
     public class RPCEndpointSettings
     {
         public string EndpointAddress { get; set; } = "http://127.0.0.1:10000";
@@ -26,14 +22,9 @@ namespace Mekitamete
         private static Settings LoadSettings()
         {
             Settings s;
-            var serializationOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNameCaseInsensitive = true
-            };
 
-            s = File.Exists(SettingsFileName) ? JsonSerializer.Deserialize<Settings>(File.ReadAllText(SettingsFileName, Encoding.UTF8), serializationOptions) : new Settings();
-            File.WriteAllText(SettingsFileName, JsonSerializer.Serialize(s, serializationOptions), Encoding.UTF8);
+            s = File.Exists(SettingsFileName) ? JsonConvert.DeserializeObject<Settings>(File.ReadAllText(SettingsFileName, Encoding.UTF8)) : new Settings();
+            File.WriteAllText(SettingsFileName, JsonConvert.SerializeObject(s, Formatting.Indented), Encoding.UTF8);
 
             if (!s.ValidateSettings(out string errorMsg))
             {

@@ -1,10 +1,10 @@
 ﻿using Mekitamete.Http.Responses;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Text.Json;
 
 namespace Mekitamete.Http
 {
@@ -28,7 +28,7 @@ namespace Mekitamete.Http
                 input = sr.ReadToEnd();
             }
 
-            return JsonSerializer.Deserialize<T>(input);
+            return JsonConvert.DeserializeObject<T>(input);
         }
 
         public HttpRequestArgs(HttpListenerContext ctx)

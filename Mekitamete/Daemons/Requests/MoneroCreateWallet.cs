@@ -1,17 +1,17 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.Json.Serialization;
 
 namespace Mekitamete.Daemons.Requests
 {
     class MoneroCreateWalletRequest
     {
-        [JsonPropertyName("filename")]
+        [JsonProperty("filename")]
         public string walletFilename { get; set; }
-        [JsonPropertyName("password")]
+        [JsonProperty("password")]
         public string walletPassword { get; set; }
-        [JsonPropertyName("language")]
+        [JsonProperty("language")]
         public string seedLanguage { get; set; }
 
         public MoneroCreateWalletRequest(string filename, string password)

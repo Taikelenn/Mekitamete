@@ -1,15 +1,15 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Text.Json.Serialization;
 
 namespace Mekitamete.Daemons.Requests
 {
     class MoneroCreateAddressRequest
     {
-        [JsonPropertyName("account_index")]
+        [JsonProperty("account_index")]
         public uint AccountIndex { get; set; }
-        [JsonPropertyName("label")]
+        [JsonProperty("label")]
         public string Label { get; set; }
 
         public MoneroCreateAddressRequest(string label)
@@ -21,9 +21,9 @@ namespace Mekitamete.Daemons.Requests
 
     class MoneroCreateAddressResponse
     {
-        [JsonPropertyName("address")]
+        [JsonProperty("address")]
         public string Address { get; set; }
-        [JsonPropertyName("address_index")]
+        [JsonProperty("address_index")]
         public uint AddressIndex { get; set; }
     }
 }
