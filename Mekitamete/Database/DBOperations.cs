@@ -45,9 +45,9 @@ namespace Mekitamete.Database
             }
         }
 
-        public void CreateTransaction(Transaction transaction)
+        private void InsertNewTransaction(Transaction transaction)
         {
-            using (SQLiteCommand insertQuery = new SQLiteCommand("INSERT INTO transactions(id, currency, value, minConfirmations, note, successUrl, failureUrl)" +
+            using (SQLiteCommand insertQuery = new SQLiteCommand("INSERT INTO transactions (id, currency, value, minConfirmations, note, successUrl, failureUrl)" +
                 "VALUES (@newId, @currency, @value, @minConf, @note, @successUrl, @failureUrl)", dbConnection))
             {
                 insertQuery.Parameters.AddWithValue("@newId", transaction.Id);
@@ -58,6 +58,27 @@ namespace Mekitamete.Database
                 insertQuery.Parameters.AddWithValue("@successUrl", transaction.SuccessUrl);
                 insertQuery.Parameters.AddWithValue("@failureUrl", transaction.FailureUrl);
                 insertQuery.ExecuteNonQuery();
+            }
+        }
+
+        public void AddNewAddress(Transaction transaction, string address)
+        {
+            using (SQLiteCommand insertQuery = new SQLiteCommand("INSERT INTO addresses (transactionId, address) VALUES (@transId, @addr)", dbConnection))
+            {
+                insertQuery.Parameters.AddWithValue("@transId", transaction.Id);
+                insertQuery.Parameters.AddWithValue("@addr", address);
+                insertQuery.ExecuteNonQuery();
+            }
+        }
+
+        public void CreateNewTransaction(Transaction transaction)
+        {
+            using (SQLiteTransaction t = dbConnection.BeginTransaction())
+            {
+                InsertNewTransaction(transaction);
+                transaction.AddNewAddress();
+
+                t.Commit();
             }
         }
 

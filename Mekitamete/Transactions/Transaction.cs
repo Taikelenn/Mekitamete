@@ -1,4 +1,5 @@
-﻿using Mekitamete.Database;
+﻿using Mekitamete.Daemons;
+using Mekitamete.Database;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -64,8 +65,27 @@ namespace Mekitamete.Transactions
             throw new ArgumentException("No data for default confirmation threshold for unknown currency", "currency");
         }
 
+        public string AddNewAddress()
+        {
+            ICryptoDaemon daemon = MainApplication.Instance.GetDaemonForCurrency(Currency);
+            if (daemon == null)
+            {
+                throw new InvalidOperationException("Cannot add a new address for a cryptocurrency which daemon is not running.");
+            }
+
+            string addr = daemon.CreateNewAddress($"meki-{Id}");
+
+            MainApplication.Instance.DBConnection.AddNewAddress(this, addr);
+            return addr;
+        }
+
         public Transaction(TransactionCurrency currency, ulong paymentAmount, ulong minConfirmations = ulong.MaxValue, string note = null, string successUrl = null, string failureUrl = null)
         {
+            if (MainApplication.Instance.GetDaemonForCurrency(currency) == null)
+            {
+                throw new InvalidOperationException("Cannot create a transaction for a cryptocurrency which daemon is not running.");
+            }
+
             DBConnection db = MainApplication.Instance.DBConnection;
             lock (IdLock)
             {
@@ -94,7 +114,7 @@ namespace Mekitamete.Transactions
             SuccessUrl = successUrl;
             FailureUrl = failureUrl;
 
-            db.CreateTransaction(this);
+            db.CreateNewTransaction(this);
 
             lock (IdLock)
             {
