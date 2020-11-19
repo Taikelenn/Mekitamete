@@ -46,11 +46,6 @@ namespace Mekitamete
                 errorMsg = "API key is empty";
             }
 
-            if (BitcoinDaemon == null && MoneroDaemon == null)
-            {
-                errorMsg = "neither Bitcoin nor Monero daemon data was specified";
-            }
-
             return errorMsg == "";
         }
 

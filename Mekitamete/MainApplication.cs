@@ -39,7 +39,14 @@ namespace Mekitamete
             // TODO: find a cleaner way to do it? preferably without resorting to reflection
             try
             {
-                CryptoDaemons.Add(TransactionCurrency.Bitcoin, new BitcoinDaemon(Settings.Instance.BitcoinDaemon));
+                if (Settings.Instance.BitcoinDaemon == null)
+                {
+                    Logger.Log($"Bitcoin: daemon disabled in configuration file", Logger.MessageLevel.Warning);
+                }
+                else
+                {
+                    CryptoDaemons.Add(TransactionCurrency.Bitcoin, new BitcoinDaemon(Settings.Instance.BitcoinDaemon));
+                }
             }
             catch (Exception ex)
             {
@@ -48,7 +55,14 @@ namespace Mekitamete
 
             try
             {
-                CryptoDaemons.Add(TransactionCurrency.Monero, new MoneroDaemon(Settings.Instance.MoneroDaemon));
+                if (Settings.Instance.MoneroDaemon == null)
+                {
+                    Logger.Log($"Monero: daemon disabled in configuration file", Logger.MessageLevel.Warning);
+                }
+                else
+                {
+                    CryptoDaemons.Add(TransactionCurrency.Monero, new MoneroDaemon(Settings.Instance.MoneroDaemon));
+                }
             }
             catch (Exception ex)
             {
