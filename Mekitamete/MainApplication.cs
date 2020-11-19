@@ -36,7 +36,29 @@ namespace Mekitamete
 
             DBConnection.InitializeDatabase();
 
-            CryptoDaemons.Add(TransactionCurrency.Monero, new MoneroDaemon(Settings.Instance.MoneroDaemon));
+            // TODO: find a cleaner way to do it? preferably without resorting to reflection
+            try
+            {
+                CryptoDaemons.Add(TransactionCurrency.Bitcoin, new BitcoinDaemon(Settings.Instance.BitcoinDaemon));
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Bitcoin: daemon initialization failed: {ex.Message}", Logger.MessageLevel.Warning);
+            }
+
+            try
+            {
+                CryptoDaemons.Add(TransactionCurrency.Monero, new MoneroDaemon(Settings.Instance.MoneroDaemon));
+            }
+            catch (Exception ex)
+            {
+                Logger.Log($"Monero: daemon initialization failed: {ex.Message}", Logger.MessageLevel.Warning);
+            }
+
+            if (CryptoDaemons.Count == 0)
+            {
+                throw new InvalidOperationException("No cryptocurrency daemons were available.");
+            }
         }
 
         public ICryptoDaemon GetDaemonForCurrency(TransactionCurrency currency)

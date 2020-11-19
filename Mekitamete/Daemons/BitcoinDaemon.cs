@@ -10,5 +10,10 @@ namespace Mekitamete.Daemons
         {
             throw new NotImplementedException();
         }
+
+        public BitcoinDaemon(RPCEndpointSettings settings)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
