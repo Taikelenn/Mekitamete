@@ -1,10 +1,11 @@
 ﻿using Mekitamete.Daemons.Requests;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Text.Json;
 
 namespace Mekitamete.Daemons
 {
@@ -18,10 +19,15 @@ namespace Mekitamete.Daemons
         /// </summary>
         /// <param name="method">The API method to call.</param>
         /// <returns>Parsed JSON response.</returns>
-        private JsonDocument MakeRequest(string method)
+        private JObject MakeRequest(string method)
         {
             return MakeRequest(method, null);
         }
+
+        /// <summary>
+        /// This is a usual UTF-8 encoding, just without the byte order mark which is not welcome in embedded JSON
+        /// </summary>
+        private static readonly Encoding Utf8Encoding = new UTF8Encoding(false);
 
         /// <summary>
         /// Executes a JSON RPC call to the wallet API with parameters as an object. The parameters are JSON-serialized using the default serializer.
@@ -29,7 +35,7 @@ namespace Mekitamete.Daemons
         /// <param name="method">The API method to call.</param>
         /// <param name="parameters">Parameters of the API method. These are method-specific.</param>
         /// <returns>Parsed JSON response.</returns>
-        private JsonDocument MakeRequest(string method, object parameters)
+        private JObject MakeRequest(string method, object parameters)
         {
             string url = EndpointSettings.EndpointAddress.TrimEnd('/') + "/json_rpc";
 
@@ -39,27 +45,36 @@ namespace Mekitamete.Daemons
             webRequest.Credentials = EndpointCredentials;
             webRequest.Timeout = 15000;
 
-            using (var jsonWriter = new Utf8JsonWriter(webRequest.GetRequestStream()))
+            using (var streamWriter = new StreamWriter(webRequest.GetRequestStream(), Utf8Encoding))
             {
-                jsonWriter.WriteStartObject();
-
-                jsonWriter.WriteString("jsonrpc", "2.0");
-                jsonWriter.WriteString("id", "0");
-                jsonWriter.WriteString("method", method);
-                if (parameters != null)
+                using (var jsonWriter = new JsonTextWriter(streamWriter))
                 {
-                    jsonWriter.WritePropertyName("params");
-                    JsonSerializer.Serialize(jsonWriter, parameters);
-                }
+                    jsonWriter.WriteStartObject();
 
-                jsonWriter.WriteEndObject();
+                    jsonWriter.WritePropertyName("jsonrpc");
+                    jsonWriter.WriteValue("2.0");
+
+                    jsonWriter.WritePropertyName("id");
+                    jsonWriter.WriteValue("0");
+
+                    jsonWriter.WritePropertyName("method");
+                    jsonWriter.WriteValue(method);
+
+                    if (parameters != null)
+                    {
+                        jsonWriter.WritePropertyName("params");
+                        JsonSerializer.CreateDefault().Serialize(jsonWriter, parameters);
+                    }
+
+                    jsonWriter.WriteEndObject();
+                }
             }
 
             using (HttpWebResponse webResponse = (HttpWebResponse)webRequest.GetResponse())
             {
                 using (StreamReader sr = new StreamReader(webResponse.GetResponseStream()))
                 {
-                    return JsonDocument.Parse(sr.ReadToEnd());
+                    return JObject.Parse(sr.ReadToEnd());
                 }
             }
         }
@@ -75,18 +90,21 @@ namespace Mekitamete.Daemons
         private T MakeRequest<T>(string method, object parameters)
         {
             var resp = MakeRequest(method, parameters);
-            if (resp.RootElement.TryGetProperty("result", out var jsonResult))
+            var successResult = resp["result"];
+            if (successResult == null) // call failed
             {
-                return JsonSerializer.Deserialize<T>(jsonResult.GetRawText());
+                string detailedErrorInfo = "<no error information>";
+                var errorObj = resp["error"];
+
+                if (errorObj != null)
+                {
+                    detailedErrorInfo = errorObj.ToString();
+                }
+
+                throw new CryptoDaemonException($"Operation {method} failed: {detailedErrorInfo}");
             }
 
-            string detailedErrorInfo = "<no error information>";
-            if (resp.RootElement.TryGetProperty("error", out var errorResult))
-            {
-                detailedErrorInfo = errorResult.GetRawText();
-            }
-
-            throw new CryptoDaemonException($"Operation {method} failed: {detailedErrorInfo}");
+            return (T)successResult.ToObject(typeof(T));
         }
 
         /// <summary>
@@ -104,15 +122,17 @@ namespace Mekitamete.Daemons
 
             var res = MakeRequest("open_wallet", new MoneroOpenWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword)); // try to open the wallet
 
-            if (res.RootElement.TryGetProperty("error", out _)) // if an error occurs, attempt to create a new wallet (Monero won't ever overwrite existing wallets anyway)
+            if (res.ContainsKey("error")) // if an error occurs, attempt to create a new wallet (Monero won't ever overwrite existing wallets anyway)
             {
                 Logger.Log("Monero: merchant wallet not found, attempting to create one", Logger.MessageLevel.Warning);
 
                 res = MakeRequest("create_wallet", new MoneroCreateWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword));
-                if (res.RootElement.TryGetProperty("error", out var errorElement))
+                if (res.ContainsKey("error"))
                 {
-                    Logger.Log($"Monero: cannot create a new wallet:\n{errorElement}", Logger.MessageLevel.Error);
-                    throw new CryptoDaemonException($"Failed to create a new Monero wallet: {errorElement}");
+                    string errorData = res["error"].ToString();
+
+                    Logger.Log($"Monero: cannot create a new wallet:\n{errorData}", Logger.MessageLevel.Error);
+                    throw new CryptoDaemonException($"Failed to create a new Monero wallet: {errorData}");
                 }
             }
 
