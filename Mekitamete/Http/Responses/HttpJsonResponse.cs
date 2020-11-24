@@ -5,8 +5,10 @@ using System.Text;
 
 namespace Mekitamete.Http.Responses
 {
-    public interface IHttpJsonResponse
+    public class HttpJsonResponse
     {
+        public string Status { get; protected set; } = "ok";
+
         public byte[] ToJsonResponse()
         {
             return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this));

@@ -11,10 +11,10 @@ namespace Mekitamete.Http
     public class HttpRequestArgs
     {
         public HttpListenerContext Context { get; }
-        public IHttpJsonResponse Response { get; set; }
+        public HttpJsonResponse Response { get; set; }
         public string Url { get; }
 
-        public void SetResponse(int statusCode, IHttpJsonResponse response)
+        public void SetResponse(int statusCode, HttpJsonResponse response)
         {
             Context.Response.StatusCode = statusCode;
             Response = response;

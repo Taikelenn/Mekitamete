@@ -12,6 +12,7 @@ namespace Mekitamete.Database
         {
             using (SQLiteCommand query = new SQLiteCommand("CREATE TABLE IF NOT EXISTS transactions (" +
                 "id INTEGER NOT NULL," +
+                "status INTEGER NOT NULL DEFAULT 0," +
                 "currency INTEGER NOT NULL," +
                 "value INTEGER NOT NULL," +
                 "minConfirmations INTEGER NOT NULL DEFAULT 1," +
@@ -47,10 +48,11 @@ namespace Mekitamete.Database
 
         private void InsertNewTransaction(Transaction transaction)
         {
-            using (SQLiteCommand insertQuery = new SQLiteCommand("INSERT INTO transactions (id, currency, value, minConfirmations, note, successUrl, failureUrl)" +
-                "VALUES (@newId, @currency, @value, @minConf, @note, @successUrl, @failureUrl)", dbConnection))
+            using (SQLiteCommand insertQuery = new SQLiteCommand("INSERT INTO transactions (id, status, currency, value, minConfirmations, note, successUrl, failureUrl)" +
+                "VALUES (@newId, @status, @currency, @value, @minConf, @note, @successUrl, @failureUrl)", dbConnection))
             {
                 insertQuery.Parameters.AddWithValue("@newId", transaction.Id);
+                insertQuery.Parameters.AddWithValue("@status", transaction.Status);
                 insertQuery.Parameters.AddWithValue("@currency", transaction.Currency);
                 insertQuery.Parameters.AddWithValue("@value", transaction.PaymentAmount);
                 insertQuery.Parameters.AddWithValue("@minConf", transaction.MinConfirmations);

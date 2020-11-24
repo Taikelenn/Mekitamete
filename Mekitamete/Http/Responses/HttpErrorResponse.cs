@@ -4,9 +4,8 @@ using System.Text;
 
 namespace Mekitamete.Http.Responses
 {
-    public class HttpErrorResponse : IHttpJsonResponse
+    public class HttpErrorResponse : HttpJsonResponse
     {
-        public string Status { get; }
         public string Message { get; }
 
         public HttpErrorResponse(string message)

@@ -9,16 +9,16 @@ namespace Mekitamete.Transactions
 {
     public enum TransactionCurrency : int
     {
-        Bitcoin,
-        Monero
+        Bitcoin = 0,
+        Monero = 1
     }
 
     public enum TransactionStatus : int
     {
-        Pending,
-        Completed,
-        Expired,
-        Cancelled
+        Pending = 0,
+        Completed = 1,
+        Expired = 2,
+        Cancelled = 3
     }
 
     public class Transaction
