@@ -64,10 +64,9 @@ namespace Mekitamete.Http
             }
 
             // determine if the endpoint contains an asterisk
-            string urlArguments = null;
             if (endpointAttribute.UrlContainsArguments)
             {
-                urlArguments = endpointAttribute.GetUrlArguments(args.Url);
+                args.UrlArguments = endpointAttribute.GetUrlArguments(args.Url);
             }
 
             // call the handler

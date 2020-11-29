@@ -13,6 +13,7 @@ namespace Mekitamete.Http
         public HttpListenerContext Context { get; }
         public HttpJsonResponse Response { get; set; }
         public string Url { get; }
+        public string UrlArguments { get; set; }
 
         public void SetResponse(int statusCode, HttpJsonResponse response)
         {
