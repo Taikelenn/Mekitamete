@@ -33,7 +33,7 @@ namespace Mekitamete.Http
             // TODO: verify the performance of this pile of reflection
 
             // any of the endpoints will do here; it's done this way in order to avoid hardcoding the namespace
-            string endpointsNamespace = typeof(MainEndpoint).Namespace;
+            string endpointsNamespace = typeof(StatusEndpoint).Namespace;
 
             // get all endpoint classes
             var allEndpoints = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.Namespace == endpointsNamespace);
@@ -46,10 +46,11 @@ namespace Mekitamete.Http
             if (endpointTuple == null)
             {
                 // TODO: send some response
-                args.SetResponse(404, null);
+                args.SetResponse(404, new HttpErrorResponse("Endpoint not found"));
                 return;
             }
 
+            var endpointAttribute = (HttpEndpointAttribute)endpointTuple.Item2;
             var endpoint = endpointTuple.Item1;
 
             // locate the correct method for requested HTTP method
@@ -58,8 +59,15 @@ namespace Mekitamete.Http
             if (methodTuple == null)
             {
                 // TODO: send some response
-                args.SetResponse(405, null);
+                args.SetResponse(405, new HttpErrorResponse("HTTP method not supported for this endpoint"));
                 return;
+            }
+
+            // determine if the endpoint contains an asterisk
+            string urlArguments = null;
+            if (endpointAttribute.UrlContainsArguments)
+            {
+                urlArguments = endpointAttribute.GetUrlArguments(args.Url);
             }
 
             // call the handler
@@ -127,8 +135,6 @@ namespace Mekitamete.Http
             {
                 while (listener.IsListening)
                 {
-                    Logger.Log("awaiting request");
-
                     try
                     {
                         if (isTerminating)
