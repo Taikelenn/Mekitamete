@@ -16,7 +16,7 @@ namespace Mekitamete.Http.Endpoints
         {
             CreateTransactionRequest request = args.GetPostData<CreateTransactionRequest>();
 
-            Transaction newTransaction = new Transaction(request.Currency, request.Value, note: request.Notes);
+            Transaction newTransaction = Transaction.CreateNewTransaction(request.Currency, request.Value, note: request.Notes);
             args.SetResponse(200, new HttpNewTransactionResponse(newTransaction));
         }
     }

@@ -3,7 +3,6 @@ using Mekitamete.Database;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Mekitamete.Transactions
 {
@@ -21,16 +20,16 @@ namespace Mekitamete.Transactions
         Cancelled = 3
     }
 
-    public class Transaction
+    public partial class Transaction
     {
-        public ulong Id { get; }
-        public TransactionCurrency Currency { get; }
-        public TransactionStatus Status { get; }
-        public ulong PaymentAmount { get; }
-        public ulong MinConfirmations { get; }
-        public string Note { get; }
-        public string SuccessUrl { get; }
-        public string FailureUrl { get; }
+        public ulong Id { get; private set; }
+        public TransactionCurrency Currency { get; private set; }
+        public TransactionStatus Status { get; private set; }
+        public ulong PaymentAmount { get; private set; }
+        public ulong MinConfirmations { get; private set; }
+        public string Note { get; private set; }
+        public string SuccessUrl { get; private set; }
+        public string FailureUrl { get; private set; }
 
         public List<string> Addresses
         {
@@ -38,31 +37,6 @@ namespace Mekitamete.Transactions
             {
                 return MainApplication.Instance.DBConnection.GetAddressesForTransaction(this);
             }
-        }
-
-        private static readonly object IdLock = new object();
-        private static readonly RNGCryptoServiceProvider cryptoRNG = new RNGCryptoServiceProvider();
-        private static readonly HashSet<ulong> pendingIDs = new HashSet<ulong>();
-
-        private static ulong GetNewTransactionId()
-        {
-            byte[] buf = new byte[8];
-            cryptoRNG.GetBytes(buf);
-
-            return BitConverter.ToUInt64(buf, 0) & 0x7FFFFFFFFFFFFFFF;
-        }
-
-        private static ulong GetDefaultConfirmationCount(TransactionCurrency currency)
-        {
-            switch (currency)
-            {
-                case TransactionCurrency.Bitcoin:
-                    return 1;
-                case TransactionCurrency.Monero:
-                    return 5;
-            }
-
-            throw new ArgumentException("No data for default confirmation threshold for unknown currency", "currency");
         }
 
         public string AddNewAddress()
@@ -79,47 +53,21 @@ namespace Mekitamete.Transactions
             return addr;
         }
 
-        public Transaction(TransactionCurrency currency, ulong paymentAmount, ulong minConfirmations = ulong.MaxValue, string note = null, string successUrl = null, string failureUrl = null)
+        internal static Transaction GetTransactionById(ulong transactionId)
         {
-            if (MainApplication.Instance.GetDaemonForCurrency(currency) == null)
-            {
-                throw new InvalidOperationException("Cannot create a transaction for a cryptocurrency which daemon is not running.");
-            }
-
             DBConnection db = MainApplication.Instance.DBConnection;
-            lock (IdLock)
+            Transaction t = db.GetTransaction(transactionId);
+            if (t == null)
             {
-                do
-                {
-                    Id = GetNewTransactionId();
-                } while (Id == 0 || pendingIDs.Contains(Id) || db.IsIDUsed(Id));
-
-                pendingIDs.Add(Id);
+                return null;
             }
 
-            Currency = currency;
-            PaymentAmount = paymentAmount;
-            Status = TransactionStatus.Pending;
-
-            if (minConfirmations == ulong.MaxValue)
+            if (MainApplication.Instance.GetDaemonForCurrency(t.Currency) == null)
             {
-                MinConfirmations = GetDefaultConfirmationCount(currency);
-            }
-            else
-            {
-                MinConfirmations = minConfirmations;
+                throw new InvalidOperationException("Cannot get a transaction for a cryptocurrency which daemon is not running.");
             }
 
-            Note = note;
-            SuccessUrl = successUrl;
-            FailureUrl = failureUrl;
-
-            db.CreateNewTransaction(this);
-
-            lock (IdLock)
-            {
-                pendingIDs.Remove(Id);
-            }
+            return t;
         }
     }
 }

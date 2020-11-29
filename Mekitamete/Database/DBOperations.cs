@@ -84,6 +84,25 @@ namespace Mekitamete.Database
             }
         }
 
+        public Transaction GetTransaction(ulong transactionId)
+        {
+            using (SQLiteCommand transQuery = new SQLiteCommand("SELECT id, status, currency, value, minConfirmations, note, successUrl, failureUrl FROM transactions " +
+                "WHERE id = @transId", dbConnection))
+            {
+                transQuery.Parameters.AddWithValue("@transId", transactionId);
+
+                using (SQLiteDataReader reader = transQuery.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return Transaction.CreateFromDatabaseEntry(reader);
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public List<string> GetAddressesForTransaction(Transaction transaction)
         {
             List<string> addresses = new List<string>();
