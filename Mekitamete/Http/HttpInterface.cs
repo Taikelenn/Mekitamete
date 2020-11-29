@@ -102,7 +102,7 @@ namespace Mekitamete.Http
 
             if (args.Response == null)
             {
-                Logger.Log($"Request {args.Url} did not produce any response", Logger.MessageLevel.Warning);
+                Logger.Log("Http", $"Request {args.Url} did not produce any response", Logger.MessageLevel.Warning);
                 args.Response = new HttpErrorResponse("Empty response");
             }
 
@@ -115,12 +115,12 @@ namespace Mekitamete.Http
 
         public void Stop()
         {
-            Logger.Log("Received a request to stop the HTTP listener");
+            Logger.Log("Http", "Received a request to stop the HTTP listener");
             isTerminating = true;
 
             if (!Task.WaitAll(runningRequests.ToArray(), 6000))
             {
-                Logger.Log("Warning: some requests were not completed", Logger.MessageLevel.Warning);
+                Logger.Log("Http", "Warning: some requests were not completed", Logger.MessageLevel.Warning);
             }
 
             runningRequests.Clear();

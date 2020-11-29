@@ -41,7 +41,7 @@ namespace Mekitamete
             {
                 if (Settings.Instance.BitcoinDaemon == null)
                 {
-                    Logger.Log($"Bitcoin: daemon disabled in configuration file", Logger.MessageLevel.Warning);
+                    Logger.Log("Bitcoin", "Daemon disabled in configuration file", Logger.MessageLevel.Warning);
                 }
                 else
                 {
@@ -50,14 +50,14 @@ namespace Mekitamete
             }
             catch (Exception ex)
             {
-                Logger.Log($"Bitcoin: daemon initialization failed: {ex.Message}", Logger.MessageLevel.Warning);
+                Logger.Log("Bitcoin", $"Daemon initialization failed: {ex.Message}", Logger.MessageLevel.Warning);
             }
 
             try
             {
                 if (Settings.Instance.MoneroDaemon == null)
                 {
-                    Logger.Log($"Monero: daemon disabled in configuration file", Logger.MessageLevel.Warning);
+                    Logger.Log("Monero", "Daemon disabled in configuration file", Logger.MessageLevel.Warning);
                 }
                 else
                 {
@@ -66,7 +66,7 @@ namespace Mekitamete
             }
             catch (Exception ex)
             {
-                Logger.Log($"Monero: daemon initialization failed: {ex.Message}", Logger.MessageLevel.Warning);
+                Logger.Log("Monero", $"Daemon initialization failed: {ex.Message}", Logger.MessageLevel.Warning);
             }
 
             if (CryptoDaemons.Count == 0)

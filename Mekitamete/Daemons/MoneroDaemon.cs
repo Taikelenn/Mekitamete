@@ -124,25 +124,25 @@ namespace Mekitamete.Daemons
 
             if (res.ContainsKey("error")) // if an error occurs, attempt to create a new wallet (Monero won't ever overwrite existing wallets anyway)
             {
-                Logger.Log("Monero: merchant wallet not found, attempting to create one", Logger.MessageLevel.Warning);
+                Logger.Log("Monero", "Merchant wallet not found, attempting to create one", Logger.MessageLevel.Warning);
 
                 res = MakeRequest("create_wallet", new MoneroCreateWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword));
                 if (res.ContainsKey("error"))
                 {
                     string errorData = res["error"].ToString();
 
-                    Logger.Log($"Monero: cannot create a new wallet:\n{errorData}", Logger.MessageLevel.Error);
+                    Logger.Log("Monero", $"Cannot create a new wallet:\n{errorData}", Logger.MessageLevel.Error);
                     throw new CryptoDaemonException($"Failed to create a new Monero wallet: {errorData}");
                 }
             }
 
-            Logger.Log($"Monero: opened wallet {MerchantWalletName}");
+            Logger.Log("Monero", $"Opened wallet {MerchantWalletName}");
         }
 
         public string CreateNewAddress(string label)
         {
             var res = MakeRequest<MoneroCreateAddressResponse>("create_address", new MoneroCreateAddressRequest(label));
-            Logger.Log($"Monero: created a new address {res.Address.Substring(0, Math.Min(res.Address.Length, 10))}... with index {res.AddressIndex}");
+            Logger.Log("Monero", $"Created a new address {res.Address.Substring(0, Math.Min(res.Address.Length, 10))}... with index {res.AddressIndex}");
 
             SaveWalletFile();
 
