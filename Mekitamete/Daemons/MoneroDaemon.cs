@@ -149,6 +149,11 @@ namespace Mekitamete.Daemons
             return res.Address;
         }
 
+        public ulong GetReceivedBalance(IEnumerable<string> address, int minConfirmations = 0)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Creates an instance of a Monero wallet daemon and opens the default merchant wallet. If the merchant wallet does not exist, it is by default created.
         /// </summary>

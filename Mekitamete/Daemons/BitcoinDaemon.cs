@@ -11,6 +11,11 @@ namespace Mekitamete.Daemons
             throw new NotImplementedException();
         }
 
+        public ulong GetReceivedBalance(IEnumerable<string> address, int minConfirmations = 0)
+        {
+            throw new NotImplementedException();
+        }
+
         public BitcoinDaemon(RPCEndpointSettings settings)
         {
             throw new NotImplementedException();
