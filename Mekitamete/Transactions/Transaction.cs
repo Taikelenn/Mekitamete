@@ -25,8 +25,8 @@ namespace Mekitamete.Transactions
         public ulong Id { get; private set; }
         public TransactionCurrency Currency { get; private set; }
         public TransactionStatus Status { get; private set; }
-        public ulong PaymentAmount { get; private set; }
-        public ulong MinConfirmations { get; private set; }
+        public long PaymentAmount { get; private set; }
+        public int MinConfirmations { get; private set; }
         public string Note { get; private set; }
         public string SuccessUrl { get; private set; }
         public string FailureUrl { get; private set; }

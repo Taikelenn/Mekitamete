@@ -27,7 +27,7 @@ namespace Mekitamete.Transactions
             return BitConverter.ToUInt64(buf, 0) & 0x7FFFFFFFFFFFFFFF;
         }
 
-        private static ulong GetDefaultConfirmationCount(TransactionCurrency currency)
+        private static int GetDefaultConfirmationCount(TransactionCurrency currency)
         {
             switch (currency)
             {
@@ -40,7 +40,7 @@ namespace Mekitamete.Transactions
             throw new ArgumentException("No data for default confirmation threshold for unknown currency", nameof(currency));
         }
 
-        public static Transaction CreateNewTransaction(TransactionCurrency currency, ulong paymentAmount, ulong minConfirmations = ulong.MaxValue, string note = null, string successUrl = null, string failureUrl = null)
+        public static Transaction CreateNewTransaction(TransactionCurrency currency, long paymentAmount, int minConfirmations = int.MaxValue, string note = null, string successUrl = null, string failureUrl = null)
         {
             if (MainApplication.Instance.GetDaemonForCurrency(currency) == null)
             {
@@ -64,7 +64,7 @@ namespace Mekitamete.Transactions
             t.PaymentAmount = paymentAmount;
             t.Status = TransactionStatus.Pending;
 
-            if (minConfirmations == ulong.MaxValue)
+            if (minConfirmations == int.MaxValue)
             {
                 t.MinConfirmations = GetDefaultConfirmationCount(currency);
             }
@@ -94,8 +94,8 @@ namespace Mekitamete.Transactions
             t.Id = (ulong)reader.GetInt64(0);
             t.Status = (TransactionStatus)reader.GetInt32(1);
             t.Currency = (TransactionCurrency)reader.GetInt32(2);
-            t.PaymentAmount = (ulong)reader.GetInt64(3);
-            t.MinConfirmations = (ulong)reader.GetInt64(4);
+            t.PaymentAmount = reader.GetInt64(3);
+            t.MinConfirmations = reader.GetInt32(4);
 
             if (!reader.IsDBNull(5))
                 t.Note = reader.GetString(5);

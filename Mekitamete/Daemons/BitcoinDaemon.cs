@@ -11,7 +11,7 @@ namespace Mekitamete.Daemons
             throw new NotImplementedException();
         }
 
-        public ulong GetReceivedBalance(IEnumerable<string> address, int minConfirmations = 0)
+        public List<CryptoTransaction> GetTransactions(IEnumerable<string> addresses, int minConfirmations = 0)
         {
             throw new NotImplementedException();
         }

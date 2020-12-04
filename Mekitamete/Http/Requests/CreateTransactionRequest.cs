@@ -11,7 +11,7 @@ namespace Mekitamete.Http.Requests
         [JsonProperty(Required = Required.Always)]
         public TransactionCurrency Currency { get; private set; }
         [JsonProperty(Required = Required.Always)]
-        public ulong Value { get; private set; }
+        public long Value { get; private set; }
         public string Notes { get; } = null;
     }
 }
