@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 
@@ -13,6 +14,9 @@ namespace Mekitamete.Daemons
     {
         private RPCEndpointSettings EndpointSettings { get; }
         private CredentialCache EndpointCredentials { get; }
+
+        private const long RefreshTickRate = 7000; // refresh every 7 seconds
+        private long LastRefreshTick { get; set; }
 
         /// <summary>
         /// Executes a JSON RPC call to the wallet API without any parameters.
@@ -37,6 +41,14 @@ namespace Mekitamete.Daemons
         /// <returns>Parsed JSON response.</returns>
         private JObject MakeRequest(string method, object parameters)
         {
+            if (Environment.TickCount64 - LastRefreshTick > RefreshTickRate)
+            {
+                Logger.Log("Monero", "Refreshing wallet...");
+
+                LastRefreshTick = Environment.TickCount64;
+                MakeRequest("refresh");
+            }
+
             string url = EndpointSettings.EndpointAddress.TrimEnd('/') + "/json_rpc";
 
             HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
@@ -104,15 +116,20 @@ namespace Mekitamete.Daemons
                 throw new CryptoDaemonException($"Operation {method} failed: {detailedErrorInfo}");
             }
 
-            return (T)successResult.ToObject(typeof(T));
+            return successResult.ToObject<T>();
         }
 
         /// <summary>
-        /// Saves any unsaved changes into the Monero wallet file. Required after wallet-changing API calls, such as address creation.
+        /// Saves any unsaved changes into the Monero wallet file.
         /// </summary>
         private void SaveWalletFile()
         {
             MakeRequest("store");
+        }
+
+        private uint GetAddressIndex(string address)
+        {
+            return MakeRequest<MoneroGetAddressIndexResponse>("get_address_index", new MoneroGetAddressIndexRequest(address)).IndexMinor;
         }
 
         private const string MerchantWalletName = "mekitamete_wallet";
@@ -120,16 +137,16 @@ namespace Mekitamete.Daemons
         {
             MakeRequest("close_wallet"); // close the wallet that is currently open
 
-            var res = MakeRequest("open_wallet", new MoneroOpenWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword)); // try to open the wallet
+            var response = MakeRequest("open_wallet", new MoneroOpenWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword)); // try to open the wallet
 
-            if (res.ContainsKey("error")) // if an error occurs, attempt to create a new wallet (Monero won't ever overwrite existing wallets anyway)
+            if (response.ContainsKey("error")) // if an error occurs, attempt to create a new wallet (Monero won't ever overwrite existing wallets anyway)
             {
                 Logger.Log("Monero", "Merchant wallet not found, attempting to create one", Logger.MessageLevel.Warning);
 
-                res = MakeRequest("create_wallet", new MoneroCreateWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword));
-                if (res.ContainsKey("error"))
+                response = MakeRequest("create_wallet", new MoneroCreateWalletRequest(MerchantWalletName, EndpointSettings.WalletPassword));
+                if (response.ContainsKey("error"))
                 {
-                    string errorData = res["error"].ToString();
+                    string errorData = response["error"].ToString();
 
                     Logger.Log("Monero", $"Cannot create a new wallet:\n{errorData}", Logger.MessageLevel.Error);
                     throw new CryptoDaemonException($"Failed to create a new Monero wallet: {errorData}");
@@ -139,19 +156,33 @@ namespace Mekitamete.Daemons
             Logger.Log("Monero", $"Opened wallet {MerchantWalletName}");
         }
 
-        public string CreateNewAddress(string label)
+        public string CreateNewAddress(string label = null)
         {
-            var res = MakeRequest<MoneroCreateAddressResponse>("create_address", new MoneroCreateAddressRequest(label));
-            Logger.Log("Monero", $"Created a new address {res.Address.Substring(0, Math.Min(res.Address.Length, 10))}... with index {res.AddressIndex}");
+            var response = MakeRequest<MoneroCreateAddressResponse>("create_address", new MoneroCreateAddressRequest(label));
+            Logger.Log("Monero", $"Created a new address {response.Address.Substring(0, Math.Min(response.Address.Length, 10))}... with index {response.AddressIndex}");
 
             SaveWalletFile();
 
-            return res.Address;
+            return response.Address;
         }
 
-        public List<CryptoTransaction> GetTransactions(IEnumerable<string> addresses, int minConfirmations = 0)
+        public List<CryptoTransaction> GetTransactions(IEnumerable<string> addresses = null, int minConfirmations = 0)
         {
-            throw new NotImplementedException();
+            List<CryptoTransaction> result = new List<CryptoTransaction>();
+
+            addresses = addresses ?? new List<string>();
+            var response = MakeRequest<MoneroGetTransfersResponse>("get_transfers", new MoneroGetTransfersRequest(addresses.Select(x => GetAddressIndex(x))));
+
+            foreach (var item in response.IncomingTransfers)
+            {
+                result.Add(new CryptoTransaction(item.TxId, item.Address, (long)item.Value, item.Confirmations));
+            }
+            foreach (var item in response.PoolTransfers)
+            {
+                result.Add(new CryptoTransaction(item.TxId, item.Address, (long)item.Value, 0));
+            }
+
+            return result.Where(x => x.Confirmations >= minConfirmations).ToList();
         }
 
         /// <summary>
@@ -165,6 +196,8 @@ namespace Mekitamete.Daemons
             EndpointCredentials.Add(new Uri(settings.EndpointAddress), "Digest", new NetworkCredential(settings.RPCUsername, settings.RPCPassword));
 
             OpenMerchantWallet();
+
+            GetTransactions();
         }
     }
 }
