@@ -31,6 +31,8 @@ namespace Mekitamete.Transactions
         public string SuccessUrl { get; private set; }
         public string FailureUrl { get; private set; }
 
+        private ICryptoDaemon AssociatedDaemon { get; }
+
         public List<string> Addresses
         {
             get
@@ -41,13 +43,7 @@ namespace Mekitamete.Transactions
 
         public string AddNewAddress()
         {
-            ICryptoDaemon daemon = MainApplication.Instance.GetDaemonForCurrency(Currency);
-            if (daemon == null)
-            {
-                throw new InvalidOperationException("Cannot add a new address for a cryptocurrency which daemon is not running.");
-            }
-
-            string addr = daemon.CreateNewAddress($"meki-{Id}");
+            string addr = AssociatedDaemon.CreateNewAddress($"meki-{Id}");
 
             MainApplication.Instance.DBConnection.AddNewAddress(this, addr);
             return addr;
@@ -55,19 +51,7 @@ namespace Mekitamete.Transactions
 
         internal static Transaction GetTransactionById(ulong transactionId)
         {
-            DBConnection db = MainApplication.Instance.DBConnection;
-            Transaction t = db.GetTransaction(transactionId);
-            if (t == null)
-            {
-                return null;
-            }
-
-            if (MainApplication.Instance.GetDaemonForCurrency(t.Currency) == null)
-            {
-                throw new InvalidOperationException("Cannot get a transaction for a cryptocurrency which daemon is not running.");
-            }
-
-            return t;
+            return MainApplication.Instance.DBConnection.GetTransaction(transactionId);
         }
     }
 }

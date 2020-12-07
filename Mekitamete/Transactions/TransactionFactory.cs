@@ -15,10 +15,17 @@ namespace Mekitamete.Transactions
         private static readonly RNGCryptoServiceProvider cryptoRNG = new RNGCryptoServiceProvider();
         private static readonly HashSet<ulong> pendingIDs = new HashSet<ulong>();
 
-        private Transaction()
+        private Transaction(TransactionCurrency currency)
         {
+            Currency = currency;
+            AssociatedDaemon = MainApplication.Instance.GetDaemonForCurrency(currency);
 
+            if (AssociatedDaemon == null)
+            {
+                throw new InvalidOperationException("Cannot create a transaction for a cryptocurrency which daemon is not running.");
+            }
         }
+
         private static ulong GetNewTransactionId()
         {
             byte[] buf = new byte[8];
@@ -42,13 +49,8 @@ namespace Mekitamete.Transactions
 
         public static Transaction CreateNewTransaction(TransactionCurrency currency, long paymentAmount, int minConfirmations = int.MaxValue, string note = null, string successUrl = null, string failureUrl = null)
         {
-            if (MainApplication.Instance.GetDaemonForCurrency(currency) == null)
-            {
-                throw new InvalidOperationException("Cannot create a transaction for a cryptocurrency which daemon is not running.");
-            }
-
             DBConnection db = MainApplication.Instance.DBConnection;
-            Transaction t = new Transaction();
+            Transaction t = new Transaction(currency);
 
             lock (IdLock)
             {
@@ -60,7 +62,6 @@ namespace Mekitamete.Transactions
                 pendingIDs.Add(t.Id);
             }
 
-            t.Currency = currency;
             t.PaymentAmount = paymentAmount;
             t.Status = TransactionStatus.Pending;
 
@@ -89,11 +90,11 @@ namespace Mekitamete.Transactions
 
         internal static Transaction CreateFromDatabaseEntry(SQLiteDataReader reader)
         {
-            Transaction t = new Transaction();
+            TransactionCurrency currency = (TransactionCurrency)reader.GetInt32(2);
+            Transaction t = new Transaction(currency);
 
             t.Id = (ulong)reader.GetInt64(0);
             t.Status = (TransactionStatus)reader.GetInt32(1);
-            t.Currency = (TransactionCurrency)reader.GetInt32(2);
             t.PaymentAmount = reader.GetInt64(3);
             t.MinConfirmations = reader.GetInt32(4);
 
