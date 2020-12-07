@@ -202,8 +202,7 @@ namespace Mekitamete.Daemons
             EndpointCredentials.Add(new Uri(settings.EndpointAddress), "Digest", new NetworkCredential(settings.RPCUsername, settings.RPCPassword));
 
             OpenMerchantWallet();
-
-            GetTransactions();
+            LastRefreshTick = 0; // refresh on the next API call
         }
     }
 }

@@ -9,12 +9,17 @@ using System.Text;
 namespace Mekitamete.Http.Endpoints
 {
     [HttpEndpoint("/newtransaction")]
-    class CreateTransactionEndpoint
+    public static class CreateTransactionEndpoint
     {
         [HttpMethod("POST")]
         public static void Post(HttpRequestArgs args)
         {
             CreateTransactionRequest request = args.GetPostData<CreateTransactionRequest>();
+            if (request == null)
+            {
+                args.SetResponse(400, new HttpErrorResponse("Incomplete request."));
+                return;
+            }
 
             Transaction newTransaction = Transaction.CreateNewTransaction(request.Currency, request.Value, note: request.Notes);
             args.SetResponse(200, new HttpNewTransactionResponse(newTransaction));
