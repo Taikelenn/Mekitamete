@@ -173,13 +173,19 @@ namespace Mekitamete.Daemons
             addresses = addresses ?? new List<string>();
             var response = MakeRequest<MoneroGetTransfersResponse>("get_transfers", new MoneroGetTransfersRequest(addresses.Select(x => GetAddressIndex(x))));
 
-            foreach (var item in response.IncomingTransfers)
+            if (response.IncomingTransfers != null)
             {
-                result.Add(new CryptoTransaction(item.TxId, item.Address, (long)item.Value, item.Confirmations));
+                foreach (var item in response.IncomingTransfers)
+                {
+                    result.Add(new CryptoTransaction(item.TxId, item.Address, (long)item.Value, (int)item.Confirmations));
+                }
             }
-            foreach (var item in response.PoolTransfers)
+            if (response.PoolTransfers != null)
             {
-                result.Add(new CryptoTransaction(item.TxId, item.Address, (long)item.Value, 0));
+                foreach (var item in response.PoolTransfers)
+                {
+                    result.Add(new CryptoTransaction(item.TxId, item.Address, (long)item.Value, 0));
+                }
             }
 
             return result.Where(x => x.Confirmations >= minConfirmations).ToList();

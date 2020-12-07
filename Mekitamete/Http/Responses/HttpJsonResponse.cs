@@ -7,7 +7,7 @@ namespace Mekitamete.Http.Responses
 {
     public class HttpJsonResponse
     {
-        public string Status { get; protected set; } = "ok";
+        public string APIResult { get; protected set; } = "ok";
 
         public byte[] ToJsonResponse()
         {

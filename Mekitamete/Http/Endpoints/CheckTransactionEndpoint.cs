@@ -27,6 +27,8 @@ namespace Mekitamete.Http.Endpoints
                 args.SetResponse(404, new HttpErrorResponse("Transaction not found."));
                 return;
             }
+
+            args.SetResponse(200, new HttpCheckTransactionResponse(t.Status));
         }
     }
 }

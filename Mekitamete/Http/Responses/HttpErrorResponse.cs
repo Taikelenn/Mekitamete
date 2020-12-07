@@ -10,7 +10,7 @@ namespace Mekitamete.Http.Responses
 
         public HttpErrorResponse(string message)
         {
-            Status = "error";
+            APIResult = "error";
             Message = message;
         }
     }
