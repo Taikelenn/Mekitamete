@@ -73,6 +73,15 @@ namespace Mekitamete
             {
                 throw new InvalidOperationException("No cryptocurrency daemons were available.");
             }
+
+            Console.CancelKeyPress += (object sender, ConsoleCancelEventArgs e) =>
+            {
+                if (e.SpecialKey == ConsoleSpecialKey.ControlC)
+                {
+                    shouldExit = true;
+                    e.Cancel = true;
+                }
+            };
         }
 
         public ICryptoDaemon GetDaemonForCurrency(TransactionCurrency currency)
@@ -80,16 +89,19 @@ namespace Mekitamete
             return CryptoDaemons.GetValueOrDefault(currency);
         }
 
-        public void RequestTermination()
-        {
-            shouldExit = true;
-        }
-
         public void Loop()
         {
             WebInterface.Listen();
 
-            Thread.Sleep(Timeout.Infinite);
+            while (true)
+            {
+                if (shouldExit)
+                {
+                    break;
+                }
+
+                Thread.Sleep(1000);
+            }
 
             WebInterface.Stop();
         }

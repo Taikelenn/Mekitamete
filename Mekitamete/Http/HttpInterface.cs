@@ -129,7 +129,8 @@ namespace Mekitamete.Http
         public async void Listen()
         {
             listener.Start();
-            
+
+            Logger.Log("Http", "Initialization completed, listening for requests");
             await Task.Run(async () =>
             {
                 while (listener.IsListening)
