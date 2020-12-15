@@ -7,12 +7,6 @@ using System.Security.Cryptography;
 
 namespace Mekitamete.Transactions
 {
-    public enum TransactionCurrency : int
-    {
-        Bitcoin = 0,
-        Monero = 1
-    }
-
     public enum TransactionStatus : int
     {
         Pending = 0,

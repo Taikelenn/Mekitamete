@@ -35,19 +35,6 @@ namespace Mekitamete.Transactions
             return BitConverter.ToUInt64(buf, 0) & 0x7FFFFFFFFFFFFFFF;
         }
 
-        private static int GetDefaultConfirmationCount(TransactionCurrency currency)
-        {
-            switch (currency)
-            {
-                case TransactionCurrency.Bitcoin:
-                    return 1;
-                case TransactionCurrency.Monero:
-                    return 5;
-            }
-
-            throw new ArgumentException("No data for default confirmation threshold for unknown currency", nameof(currency));
-        }
-
         public static Transaction CreateNewTransaction(TransactionCurrency currency, long paymentAmount, int minConfirmations = int.MaxValue, string note = null, string successUrl = null, string failureUrl = null)
         {
             DBConnection db = MainApplication.Instance.DBConnection;
@@ -68,7 +55,7 @@ namespace Mekitamete.Transactions
 
             if (minConfirmations == int.MaxValue)
             {
-                t.MinConfirmations = GetDefaultConfirmationCount(currency);
+                t.MinConfirmations = currency.GetDefaultConfirmationCount();
             }
             else
             {
@@ -86,6 +73,7 @@ namespace Mekitamete.Transactions
                 pendingIDs.Remove(t.Id);
             }
 
+            Logger.Log("Transactions", $"Created a new transaction for {currency.PrettyPrintedValue(t.PaymentAmount)} with ID {t.Id}");
             return t;
         }
 

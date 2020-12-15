@@ -14,8 +14,8 @@ namespace Mekitamete.Http
 {
     public class HttpInterface 
     {
-        private HttpListener listener;
-        private List<Task> runningRequests;
+        private readonly HttpListener listener;
+        private readonly List<Task> runningRequests;
 
         private bool isTerminating;
 

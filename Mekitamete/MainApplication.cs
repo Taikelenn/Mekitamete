@@ -25,8 +25,9 @@ namespace Mekitamete
 
         private bool shouldExit;
         internal DBConnection DBConnection { get; }
-        private HttpInterface WebInterface { get; }
-        private Dictionary<TransactionCurrency, ICryptoDaemon> CryptoDaemons { get; }
+
+        private readonly HttpInterface WebInterface;
+        private readonly Dictionary<TransactionCurrency, ICryptoDaemon> CryptoDaemons;
 
         private MainApplication()
         {
