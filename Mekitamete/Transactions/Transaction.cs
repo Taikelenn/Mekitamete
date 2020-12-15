@@ -46,6 +46,7 @@ namespace Mekitamete.Transactions
         public string FailureUrl { get; private set; }
 
         private ICryptoDaemon AssociatedDaemon { get; }
+        private object TransactionLock { get; }
 
         public List<string> Addresses
         {
@@ -71,6 +72,45 @@ namespace Mekitamete.Transactions
         public int GetConfirmationCount()
         {
             return AssociatedDaemon.GetTransactions(Addresses).Select(x => x.Confirmations).DefaultIfEmpty().Min();
+        }
+
+        private bool SetTransactionStatus(TransactionStatus newStatus)
+        {
+            lock (TransactionLock) // lock this particular transaction to avoid multiple completions/cancellations
+            {
+                if (Status != TransactionStatus.Pending)
+                {
+                    return false;
+                }
+
+                Status = newStatus;
+            }
+
+            return true;
+        }
+
+        public void CompleteTransaction()
+        {
+            if (SetTransactionStatus(TransactionStatus.Completed))
+            {
+                MainApplication.Instance.DBConnection.UpdateTransactionStatus(this);
+            }
+        }
+
+        public void CancelTransaction()
+        {
+            if (SetTransactionStatus(TransactionStatus.Cancelled))
+            {
+                MainApplication.Instance.DBConnection.UpdateTransactionStatus(this);
+            }
+        }
+
+        public void UpdateTransaction()
+        {
+            if (Status == TransactionStatus.Pending && GetReceivedAmount().Confirmed >= PaymentAmount)
+            {
+                CompleteTransaction();
+            }
         }
 
         internal static Transaction GetTransactionById(ulong transactionId)

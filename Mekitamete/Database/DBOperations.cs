@@ -103,6 +103,16 @@ namespace Mekitamete.Database
             return null;
         }
 
+        public void UpdateTransactionStatus(Transaction transaction)
+        {
+            using (SQLiteCommand statusQuery = new SQLiteCommand("UPDATE transactions SET status = @newStatus WHERE id = @transId", dbConnection))
+            {
+                statusQuery.Parameters.AddWithValue("@transId", transaction.Id);
+                statusQuery.Parameters.AddWithValue("@newStatus", transaction.Status);
+                statusQuery.ExecuteNonQuery();
+            }
+        }
+
         public List<string> GetAddressesForTransaction(Transaction transaction)
         {
             List<string> addresses = new List<string>();

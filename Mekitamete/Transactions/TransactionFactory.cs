@@ -17,6 +17,7 @@ namespace Mekitamete.Transactions
 
         private Transaction(TransactionCurrency currency)
         {
+            TransactionLock = new object();
             Currency = currency;
             AssociatedDaemon = MainApplication.Instance.GetDaemonForCurrency(currency);
 

@@ -16,7 +16,7 @@ namespace Mekitamete.Daemons
         private CredentialCache EndpointCredentials { get; }
 
         private const long RefreshTickRate = 7000; // refresh every 7 seconds
-        private long LastRefreshTick { get; set; }
+        private long LastRefreshTick { get; set; } = -1; // do not refresh
 
         /// <summary>
         /// Executes a JSON RPC call to the wallet API without any parameters.
@@ -41,7 +41,7 @@ namespace Mekitamete.Daemons
         /// <returns>Parsed JSON response.</returns>
         private JObject MakeRequest(string method, object parameters)
         {
-            if (Environment.TickCount64 - LastRefreshTick > RefreshTickRate)
+            if (LastRefreshTick >= 0 && Environment.TickCount64 - LastRefreshTick > RefreshTickRate)
             {
                 Logger.Log("Monero", "Refreshing wallet...");
 
@@ -197,12 +197,15 @@ namespace Mekitamete.Daemons
         /// <param name="settings">Daemon endpoint settings.</param>
         public MoneroDaemon(RPCEndpointSettings settings)
         {
+            LastRefreshTick = -1; // disable refreshing
+
             EndpointSettings = settings;
             EndpointCredentials = new CredentialCache();
             EndpointCredentials.Add(new Uri(settings.EndpointAddress), "Digest", new NetworkCredential(settings.RPCUsername, settings.RPCPassword));
 
             OpenMerchantWallet();
-            LastRefreshTick = 0; // refresh on the next API call
+
+            LastRefreshTick = 0; // enable refreshing + refresh on the next API call
         }
     }
 }
