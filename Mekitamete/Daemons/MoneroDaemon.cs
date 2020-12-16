@@ -19,6 +19,11 @@ namespace Mekitamete.Daemons
         private long LastRefreshTick { get; set; } = -1; // do not refresh
 
         /// <summary>
+        /// This is a usual UTF-8 encoding, just without the byte order mark which is not welcome in embedded JSON
+        /// </summary>
+        private static readonly Encoding Utf8Encoding = new UTF8Encoding(false);
+
+        /// <summary>
         /// Executes a JSON RPC call to the wallet API without any parameters.
         /// </summary>
         /// <param name="method">The API method to call.</param>
@@ -27,11 +32,6 @@ namespace Mekitamete.Daemons
         {
             return MakeRequest(method, null);
         }
-
-        /// <summary>
-        /// This is a usual UTF-8 encoding, just without the byte order mark which is not welcome in embedded JSON
-        /// </summary>
-        private static readonly Encoding Utf8Encoding = new UTF8Encoding(false);
 
         /// <summary>
         /// Executes a JSON RPC call to the wallet API with parameters as an object. The parameters are JSON-serialized using the default serializer.
@@ -169,10 +169,9 @@ namespace Mekitamete.Daemons
         public List<CryptoTransaction> GetTransactions(IEnumerable<string> addresses = null, int minConfirmations = 0)
         {
             List<CryptoTransaction> result = new List<CryptoTransaction>();
-
             addresses = addresses ?? new List<string>();
-            var response = MakeRequest<MoneroGetTransfersResponse>("get_transfers", new MoneroGetTransfersRequest(addresses.Select(x => GetAddressIndex(x))));
 
+            var response = MakeRequest<MoneroGetTransfersResponse>("get_transfers", new MoneroGetTransfersRequest(addresses.Select(x => GetAddressIndex(x))));
             if (response.IncomingTransfers != null)
             {
                 foreach (var item in response.IncomingTransfers)
@@ -197,6 +196,8 @@ namespace Mekitamete.Daemons
         /// <param name="settings">Daemon endpoint settings.</param>
         public MoneroDaemon(RPCEndpointSettings settings)
         {
+            Logger.Log("Monero", "Initializing daemon...");
+
             LastRefreshTick = -1; // disable refreshing
 
             EndpointSettings = settings;
@@ -204,8 +205,9 @@ namespace Mekitamete.Daemons
             EndpointCredentials.Add(new Uri(settings.EndpointAddress), "Digest", new NetworkCredential(settings.RPCUsername, settings.RPCPassword));
 
             OpenMerchantWallet();
-
             LastRefreshTick = 0; // enable refreshing + refresh on the next API call
+
+            Logger.Log("Monero", "Daemon initialized");
         }
     }
 }

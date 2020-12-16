@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Mekitamete.Http.Responses
 {
-    public class HttpStatusCheckResponse
+    public class HttpStatusCheckResponse : HttpJsonResponse
     {
         public class DaemonStatus
         {
