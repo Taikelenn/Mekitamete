@@ -12,13 +12,7 @@ namespace Mekitamete.Http.Endpoints
         [HttpMethod("GET")]
         public static void Get(HttpRequestArgs args)
         {
-            args.SetResponse(200, new HttpErrorResponse("Test GET implementation"));
-        }
-
-        [HttpMethod("POST")]
-        public static void Post(HttpRequestArgs args)
-        {
-            args.SetResponse(200, new HttpErrorResponse("Test POST implementation"));
+            args.SetResponse(200, new HttpStatusCheckResponse());
         }
     }
 }

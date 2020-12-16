@@ -114,7 +114,6 @@ namespace Mekitamete
                 if (disposing)
                 {
                     DBConnection.Dispose();
-                    Instance = null;
                 }
 
                 Instance = null;
